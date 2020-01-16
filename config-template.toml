@@ -1,3 +1,7 @@
+[server]
+bind = "0.0.0.0"
+port = 5987
+
 [database]
 hostname = "localhost"
 port = 3306

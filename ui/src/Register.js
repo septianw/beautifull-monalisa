@@ -199,6 +199,23 @@ class Register extends React.Component {
         } else {
           t = bodyText;
         }
+        if (t.includes("DATABASE_EXEC_FAIL")) {
+          let state = {};
+          if (t.includes("Error 1062")) {
+            state.tooltipMobileOpen = true;
+            state.tooltipMobileMessage = "Somebody have use this mobile number to register here.";
+          }
+
+          console.log("1")
+          if (t.includes("Duplicate email found")) {
+            console.log("2");
+            state.tooltipEmailOpen = true;
+            state.tooltipEmailMessage = "Somebody have use this email to register here.";
+          }
+
+          this.modifyState(state); 
+        }
+
         if (t.includes("INPUT_VALIDATION_FAIL")) {
           let state = {};
           if (t.includes("Firstname")) {
@@ -226,7 +243,7 @@ class Register extends React.Component {
             state.tooltipEmailMessage = "Enter valid email address.";
           } else {
             this.setState({
-              tooltipMobileOpen: !this.state.tooltipMobileOpen
+              tooltipEmailOpen: !this.state.tooltipEmailOpen
             })
           }
 

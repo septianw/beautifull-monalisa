@@ -16,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	// "github.com/spf13/viper"
+
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/gin-contrib/cors"
@@ -47,6 +49,9 @@ var Dbmap *gorp.DbMap
 var Cfg Config
 var err error
 
+// var L log15.Logger
+// var Config *viper.Viper
+
 var ListenAddr = "0.0.0.0:5987"
 
 func init() {
@@ -73,9 +78,6 @@ func init() {
 		}
 
 		for _, b := range validPrefix {
-			log15.Debug("cutoff mobile", "d[prefixStart:prefixEnd]", d[prefixStart:prefixEnd])
-			log15.Debug("length mobile", "len(d)", len(d))
-			log15.Debug("bool mobile", "(b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13)", (b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13))
 			if (b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13) {
 				valid = true
 			}
@@ -141,11 +143,15 @@ func init() {
 		return valid
 	})
 
-	// validator.SetFieldsRequiredByDefault(true)
+	// Initiate a logger
+	// L = log15.New("module", "main")
+
+	// Initiate a config
+	// Config = viper.New()
+
 }
 
 func main() {
-	// Dbmap, Cfg, err = FirstInit()
 	ErrHandler(err)
 	r := gin.Default()
 	r = Router(r)

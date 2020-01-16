@@ -76,6 +76,9 @@ func PostUserHandler(c *gin.Context) {
 
 	usr, err := GetUser(input)
 	ErrHandler(err)
+	log.Debug("Error GetUser with duplicate.")
+	log.Debug("It's from query", "usr", usr)
+	log.Debug("It's from input", "input", input)
 	if (strings.Compare(usr.Mobile, input.Mobile) == 0) ||
 		(strings.Compare(usr.Email, input.Email) == 0) {
 		c.JSON(http.StatusConflict, gin.H{"code": DATABASE_EXEC_FAIL,

@@ -10,6 +10,7 @@ import (
 
 	"fmt"
 
+	"errors"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -98,6 +99,7 @@ func InsertUser(user UserIn) (err error) {
 	Dbmap, Cfg, err = InitDb()
 	ErrHandler(err)
 	t, _ := time.Parse("02-01-2006", user.DateOfBirth)
+	var q string
 	// ErrHandler(err)
 
 	u := User{
@@ -108,18 +110,37 @@ func InsertUser(user UserIn) (err error) {
 		DateOfBirth:  t,
 	}
 
+	q = fmt.Sprintf("select count(*) from user where mobile_number = '%s'", user.Mobile)
+	mobileNum, err := Dbmap.SelectInt(q)
+	ErrHandler(err)
+	log.Debug("Number of duplicate mobile found.", "mobileNum", mobileNum)
+
+	q = fmt.Sprintf("select count(*) from user where email = '%s'", user.Email)
+	emailNum, err := Dbmap.SelectInt(q)
+	ErrHandler(err)
+	log.Debug("Email of duplicate email found.", "emailNum", emailNum)
+
 	// if strings.Compare(user.Gender, "") == 0 {
 	// 	u.Gender = "Prefer not to mention"
 	// }
 
-	// log.Debug(fmt.Sprintf("%+v", "error debug"))
-	err = Dbmap.Insert(&u)
-	log.Debug("dbMap at common", "asdf", Dbmap)
-	if err != nil {
-		log.Debug(fmt.Sprintf("err %+v", err))
+	if (mobileNum != 0) && (emailNum != 0) {
+		err = Dbmap.Insert(&u)
+		ErrHandler(err)
+	} else {
+		// duplicate found
+		if mobileNum > 0 {
+			err = errors.New("Duplicate mobile_number found.")
+		}
+
+		if emailNum > 0 {
+			err = errors.New("Duplicate email found.")
+		}
+
+		if (emailNum > 0) && (mobileNum > 0) {
+			err = errors.New("Mobile number and email must be unique.")
+		}
 	}
-	// log.Error(fmt.Sprintf("err %+v", err))
-	// ErrHandler(err)
 
 	return
 }
@@ -129,9 +150,10 @@ func GetUser(user UserIn) (result UserIn, err error) {
 	ErrHandler(err)
 
 	var res UserResult
-	var q = fmt.Sprintf("select * from user where mobile_number = '%s' and email = '%s'", user.Mobile, user.Email)
+	var q string
 	log.Debug("Query of getUser", "q", q)
 
+	q = fmt.Sprintf("select * from user where mobile_number = '%s' and email = '%s'", user.Mobile, user.Email)
 	err = Dbmap.SelectOne(&res, q)
 	ErrHandler(err)
 

@@ -5,8 +5,8 @@ import { Dateselect } from './Htmlcomp';
 /**
  * TODO:
  * 1. [x] GET VALUE FROM FORM AND SEND IT TO BACKEND
- * 2. [ ] PUT VALIDATION AROUND THE FORM
- * 3. [ ] PUT THE LOGIC OF DESIGN INTO WHOLE UI
+ * 2. [x] PUT VALIDATION AROUND THE FORM
+ * 3. [x] PUT THE LOGIC OF DESIGN INTO WHOLE UI
  */
 
 class LoginButton extends React.Component {
@@ -17,7 +17,7 @@ class LoginButton extends React.Component {
   render() {
     if (this.props.show) {
       return <Col id="footerBlock" className="footerBlockDisable" sm="12" md={{ size: 6, offset: 3 }}>
-        <Button color="primary" className="btn-login">Login</Button>
+        <a href="/login" color="primary" className="btn-login btn btn-primary">Login</a>
       </Col>
     } else {
       return <Col id="footerBlock" className="footerBlock" sm="12" md={{ size: 6, offset: 3 }}>
@@ -42,7 +42,6 @@ class Register extends React.Component {
     this.refDOByear = React.createRef();
     this.refSubmitButton = React.createRef();
     this.refFooterBlock = React.createRef();
-    console.log(this.refTitle);
     
     this.state = {
       showLogin: false,
@@ -128,7 +127,7 @@ class Register extends React.Component {
     e.preventDefault();
     let value = {}
     let validMobile, validEmail;
-    let validMobileMsg, validEmailMsg;
+    // let validMobileMsg, validEmailMsg;
 
     // console.log(this.refMobile.current.value);
     // input should be like this:
@@ -206,11 +205,13 @@ class Register extends React.Component {
             state.tooltipMobileMessage = "Somebody have use this mobile number to register here.";
           }
 
-          console.log("1")
           if (t.includes("Duplicate email found")) {
-            console.log("2");
             state.tooltipEmailOpen = true;
             state.tooltipEmailMessage = "Somebody have use this email to register here.";
+          }
+          if (t.includes("Duplicate mobile_number found")) {
+            state.tooltipMobileOpen = true;
+            state.tooltipMobileMessage = "Somebody have use this mobile number to register here.";
           }
 
           this.modifyState(state); 
@@ -287,7 +288,7 @@ class Register extends React.Component {
     console.log(this.props.s.url);
     console.log(url.toString());
     let head = new Headers();
-    // head.append("Authorization", "Bearer c66f2005-b556-47e9-8086-328a354e6064");
+    head.append("Authorization", "Bearer " + this.props.s.apikey);
 
     let req = new Request(url.toString(), {
       // mode: "no-cors",
@@ -298,6 +299,11 @@ class Register extends React.Component {
 
     hit(req);
     console.log(req);
+  }
+
+  componentDidMount() {
+    console.log(this.state);
+    console.log(this.props);
   }
 
   render() {

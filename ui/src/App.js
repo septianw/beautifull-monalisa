@@ -1,9 +1,9 @@
 import React from 'react';
 import './App.css';
 import Register from './Register'
+import { Container, Row, Col, Button } from 'reactstrap';
 
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import { stat } from 'fs';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
 var wsconn;
 
@@ -14,6 +14,29 @@ function WebsocketConnect(url) {
   }
 
   return wsconn;
+}
+
+class Login extends React.Component {
+  onSubmit() {
+    console.log("You are trying to login.");
+  }
+  render() {
+    return <div id="wrapperin">
+      <Container id="wrapperout" fluid="sm">
+        <Row id="registerWrapper">
+          <Col id="registerBlock" sm="12" md={{ size: 6, offset: 3 }}>
+            <h2>Login</h2>
+            <form onSubmit={this.onSubmit.bind(this)}>
+
+              <input type="text" name="username" className="form-control" placeholder="Username." />
+              <input type="password" name="password" className="form-control" placeholder="*******" />
+              <Button color="primary" className="btn-register" >Login</Button>
+            </form>
+          </Col>
+        </Row>
+      </Container>
+    </div>
+  }
 }
 
 class App extends React.Component {
@@ -43,9 +66,14 @@ class App extends React.Component {
 
   render() {
     return <Router>
-      <Route path="/">
-        <Register s={this.state} />
-      </Route>
+      <Switch>
+        <Route exact={true} path="/">
+          <Register s={this.state} />
+        </Route>
+        <Router exact={true} path="/login">
+          <Login />
+        </Router>
+      </Switch>
     </Router>
   }
 }

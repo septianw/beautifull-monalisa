@@ -90,6 +90,7 @@ func PostUserHandler(c *gin.Context) {
 	ErrHandler(err)
 	if valid {
 		err = InsertUser(input)
+		ErrHandler(err)
 
 		if err != nil {
 			log.Debug("Problem in insert user", "error", err)

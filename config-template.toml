@@ -5,6 +5,6 @@ port = 5987
 [database]
 hostname = "localhost"
 port = 3306
-username = "asep"
-password = "dummypass"
-database = "monalisa"
+username = ""
+password = ""
+database = ""

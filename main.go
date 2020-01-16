@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "errors"
+	"errors"
 	"net/http"
 
 	// "strings"
@@ -207,32 +207,36 @@ func Router(r *gin.Engine) *gin.Engine {
 		AllowCredentials: true,
 	}))
 
-	// r.Use(func(c *gin.Context) {
-	// 	var h Head
-	// 	log.Println("1")
+	r.Use(func(c *gin.Context) {
+		var h Head
 
-	// 	log.Println(c.GetHeader("Authorization"))
+		log.Println(c.FullPath())
+		if strings.Compare(c.FullPath(), "/ws") == 0 {
+			c.Next()
+			return
+		}
+		log.Println(c.GetHeader("Authorization"))
 
-	// 	if err = c.ShouldBindHeader(&h); err != nil {
-	// 		ErrHandler(err)
-	// 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"code": INPUT_VALIDATION_FAIL,
-	// 			"message": fmt.Sprintf("INPUT_VALIDATION_FAIL: %s", errors.New("x-terminal header not found. access forbidden.").Error())})
-	// 		c.Abort()
-	// 		return
-	// 	}
+		if err = c.ShouldBindHeader(&h); err != nil {
+			ErrHandler(err)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"code": INPUT_VALIDATION_FAIL,
+				"message": fmt.Sprintf("INPUT_VALIDATION_FAIL: %s", errors.New("x-terminal header not found. access forbidden.").Error())})
+			c.Abort()
+			return
+		}
 
-	// 	// check authorization
-	// 	if strings.Compare(h.Authorization, "") == 0 {
-	// 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": FORBIDDEN_CODE,
-	// 			"message": fmt.Sprintf("FORBIDDEN: %s", errors.New("Authorization required. Please login first.").Error())})
-	// 		return
-	// 	} else if strings.Compare(strings.Split(h.Authorization, " ")[1], apikey) == 0 {
-	// 		c.Next()
-	// 		return
-	// 	}
+		// check authorization
+		if strings.Compare(h.Authorization, "") == 0 {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": FORBIDDEN_CODE,
+				"message": fmt.Sprintf("FORBIDDEN: %s", errors.New("Authorization required. Please login first.").Error())})
+			return
+		} else if strings.Compare(strings.Split(h.Authorization, " ")[1], apikey) == 0 {
+			c.Next()
+			return
+		}
 
-	// 	return
-	// })
+		return
+	})
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")

@@ -98,9 +98,9 @@ func InitDb() (dbmap *gorp.DbMap, config Config, err error) {
 func InsertUser(user UserIn) (err error) {
 	Dbmap, Cfg, err = InitDb()
 	ErrHandler(err)
-	t, _ := time.Parse("02-01-2006", user.DateOfBirth)
+	t, err := time.Parse("02-01-2006", user.DateOfBirth)
 	var q string
-	// ErrHandler(err)
+	ErrHandler(err)
 
 	u := User{
 		MobileNumber: user.Mobile,
@@ -124,10 +124,13 @@ func InsertUser(user UserIn) (err error) {
 	// 	u.Gender = "Prefer not to mention"
 	// }
 
-	if (mobileNum != 0) && (emailNum != 0) {
+	if (mobileNum == 0) && (emailNum == 0) {
+		log.Debug("1")
 		err = Dbmap.Insert(&u)
+		log.Debug("U variable after insert", "u", u)
 		ErrHandler(err)
 	} else {
+		log.Debug("2")
 		// duplicate found
 		if mobileNum > 0 {
 			err = errors.New("Duplicate mobile_number found.")

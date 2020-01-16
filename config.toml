@@ -1,0 +1,6 @@
+[database]
+hostname = "localhost"
+port = 3306
+username = "asep"
+password = "dummypass"
+database = "monalisa"

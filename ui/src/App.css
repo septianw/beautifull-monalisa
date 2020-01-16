@@ -1,0 +1,95 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#registerBlock {
+  padding: 36px;
+  background: #fafafa;
+  border-radius: 15px;
+  margin-top: 10px;
+  margin-bottom: 25px;
+}
+
+.form-control {
+  margin-bottom: 18px;
+}
+
+.btn-register {
+  overflow: visible;
+  background: #a051b0 !important;
+  border-color: #a051b0 !important;
+  border: none;
+  width: 100%;
+  border-radius: 4px;
+  color: white;
+}
+
+.nobgbd {
+  background: none !important;
+  border: none !important;
+}
+
+#dob-group {
+  padding-left: 0px;
+}
+
+#dob-group select {
+  word-wrap: normal;
+  margin: 0 5px;
+  background: none;
+  border-radius: 3px;
+  padding: 3px;
+}
+
+.gender-select label {
+  margin-left: 30px;
+}
+
+#footerBlock {
+  height: 100px;
+  background: #a051b0;
+}
+
+input[type='number'] {
+    -moz-appearance:textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}

@@ -10,11 +10,18 @@ import { Dateselect } from './Htmlcomp';
  */
 
 class LoginButton extends React.Component {
+  constructor(props) {
+    super(props);
+    this.refFooterBlock = React.createRef();
+  }
   render() {
     if (this.props.show) {
-      return <Button color="primary" className="btn-login">Login</Button>
+      return <Col id="footerBlock" className="footerBlockDisable" sm="12" md={{ size: 6, offset: 3 }}>
+        <Button color="primary" className="btn-login">Login</Button>
+      </Col>
     } else {
-      return null;
+      return <Col id="footerBlock" className="footerBlock" sm="12" md={{ size: 6, offset: 3 }}>
+      </Col>
     }
   }
 }
@@ -22,6 +29,8 @@ class LoginButton extends React.Component {
 class Register extends React.Component {
   constructor(props) {
     super(props);
+    this.refTitle = React.createRef();
+    this.refDobLabel = React.createRef();
     this.refMobile = React.createRef();
     this.refEmail = React.createRef();
     this.refFirstname = React.createRef();
@@ -32,18 +41,23 @@ class Register extends React.Component {
     this.refDOBmonth = React.createRef();
     this.refDOByear = React.createRef();
     this.refSubmitButton = React.createRef();
-
+    this.refFooterBlock = React.createRef();
+    console.log(this.refTitle);
+    
     this.state = {
       showLogin: false,
       tooltipMobileOpen: false,
       tooltipEmailOpen: false,
       tooltipFirstnameOpen: false,
       tooltipLastnameOpen: false,
+      submitButtonDisable: false,
       tooltipMobileMessage: "Please enter valid indonesian mobile phone number.",
       tooltipEmailMessage: "Seems like someone already used this email address to register here.",
       tooltipFirstnameMessage: "Firstname field cannot be empty.",
-      tooltipLastnameMessage: "Lastname field cannot be empty."
+      tooltipLastnameMessage: "Lastname field cannot be empty.",
+      refSubmitButton: React.createRef()
     }
+    console.log(this.state.refSubmitButton);
   }
 
   modifyState(modifiedState) {
@@ -144,8 +158,9 @@ class Register extends React.Component {
         tooltipMobileOpen: false
       });
       console.log(value);
-    //   this.send(value);
+      this.send(value);
     }
+    // console.log(this.refMobile);
   }
 
   send(formValue) {
@@ -222,11 +237,24 @@ class Register extends React.Component {
       }
 
       if (response.status === 201) {
+        this.refMobile.current.disabled = true;
+        this.refEmail.current.disabled = true;
+        this.refFirstname.current.disabled = true;
+        this.refLastname.current.disabled = true;
+        this.refGenderFemale.current.disabled = true;
+        this.refGenderMale.current.disabled = true;
+        this.refDOBday.current.disabled = true;
+        this.refDOBmonth.current.disabled = true;
+        this.refDOByear.current.disabled = true;
+        this.refTitle.current.style.cssText = "color: #b3b3b3"
+        this.refDobLabel.current.style.cssText = "color: #b3b3b3"
+        
         this.setState({
           tooltipMobileOpen: false,
           tooltipEmailOpen: false,
           tooltipFirstnameOpen: false,
           tooltipLastnameOpen: false,
+          submitButtonDisable: true,
           showLogin: true
         })
       }
@@ -260,7 +288,7 @@ class Register extends React.Component {
       <Container id="wrapperout" fluid="sm">
         <Row id="registerWrapper">
           <Col id="registerBlock" sm="12" md={{ size: 6, offset: 3 }}>
-            <h2>Registration</h2>
+            <h2 ref={this.refTitle}>Registration</h2>
             <form onSubmit={this.onSubmit.bind(this)}>
               <Tooltip placement="top" isOpen={this.state.tooltipMobileOpen} autohide={true} target="mobileField" >{this.state.tooltipMobileMessage}</Tooltip>
               <input id="mobileField" type="number" required name="mobile" ref={this.refMobile} className="form-control" placeholder="Mobile number" />
@@ -271,7 +299,7 @@ class Register extends React.Component {
               <Tooltip placement="top" isOpen={this.state.tooltipLastnameOpen} autohide={true} target="lastnameField" >{this.state.tooltipLastnameMessage}</Tooltip>
               <input id="lastnameField" type="text" required name="lastname" ref={this.refLastname} className="form-control" placeholder="Lastname" />
 
-              <label htmlFor="dob-group">Date of Birth</label>
+              <label htmlFor="dob-group" ref={this.refDobLabel}>Date of Birth</label>
               <div id="dob-group" className="form-control nobgbd">
                 <select name="month" ref={this.refDOBmonth} defaultValue={'DEFAULT'}>
                   <option value="DEFAULT" disabled>Month</option>
@@ -361,16 +389,14 @@ December - 31 days */}
               </div>
 
               <Tooltip placement="top" isOpen={this.state.tooltipEmailOpen} autohide={true} target="emailField" >{this.state.tooltipEmailMessage}</Tooltip>
-              <input id="emailField" type="text" required name="email" ref={this.refEmail} className="form-control" placeholder="Email" />
+              <input id="emailField" type="email" required name="email" ref={this.refEmail} className="form-control" placeholder="Email" />
 
-              <Button color="primary" className="btn-register" ref={this.refSubmitButton}>Register</Button>
+              <Button color="primary" className="btn-register" disabled={this.state.submitButtonDisable}>Register</Button>
             </form>
           </Col>
         </Row>
         <Row id="footerWrapper">
-          <Col id="footerBlock" sm="12" md={{ size: 6, offset: 3 }}>
-            <LoginButton show={this.state.showLogin} />
-          </Col>
+          <LoginButton show={this.state.showLogin} />
         </Row>
       </Container>
     </div>

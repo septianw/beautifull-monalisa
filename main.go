@@ -65,13 +65,18 @@ func init() {
 			return valid
 		}
 
+		log15.Debug("input value", "mobile", d)
+
 		if d[0:1] == "0" {
 			prefixStart = 1
 			prefixEnd = 4
 		}
 
 		for _, b := range validPrefix {
-			if (b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 12) {
+			log15.Debug("cutoff mobile", "d[prefixStart:prefixEnd]", d[prefixStart:prefixEnd])
+			log15.Debug("length mobile", "len(d)", len(d))
+			log15.Debug("bool mobile", "(b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13)", (b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13))
+			if (b == d[prefixStart:prefixEnd]) && (len(d) > 9) && (len(d) < 13) {
 				valid = true
 			}
 		}

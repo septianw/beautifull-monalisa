@@ -31,6 +31,8 @@ class Register extends React.Component {
     this.refDOBday = React.createRef();
     this.refDOBmonth = React.createRef();
     this.refDOByear = React.createRef();
+    this.refSubmitButton = React.createRef();
+
     this.state = {
       showLogin: false,
       tooltipMobileOpen: false,
@@ -63,7 +65,8 @@ class Register extends React.Component {
     });
   }
 
-  validateMobile(numb) {
+  validateMobile() {
+    let numb = this.refMobile.current.value;
     // my case only cover cell phone number, this prefix can be extend.
     // @see https://en.wikipedia.org/wiki/List_of_mobile_telephone_prefixes_by_country
     const validPrefix = ["811", "812", "813", "814", "815", "816", "817", "818", "819", "838", "852", "853", "855", "856", "858", "859", "878", "896", "897", "898", "899"]
@@ -84,21 +87,36 @@ class Register extends React.Component {
       out = true;
     }
 
+    if (!out) {
+      this.modifyState({
+        tooltipMobileOpen: true,
+        tooltipMobileMessage: "Please enter valid indonesian mobile phone number."
+      })
+    }
+
     return out;
   }
 
-  validateEmail(email) {
+  validateEmail() {
+    let email = this.refEmail.current.value;
     let regex = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-    return regex.test(email);
+    let isValid = regex.test(email);
+    if (!isValid) {
+      this.modifyState({
+        tooltipEmailOpen: true,
+        tooltipEmailMessage: "Pease enter valid email."
+      })
+    }
+    return isValid;
   }
 
   onSubmit(e) {
     e.preventDefault();
-    console.log('wow');
     let value = {}
     let validMobile, validEmail;
+    let validMobileMsg, validEmailMsg;
 
-    console.log(this.refMobile.current.value);
+    // console.log(this.refMobile.current.value);
     // input should be like this:
     // {"mobile":"08123456750","email":"user@network.net","firstname":"Maya","lastname":"Lauren","date_of_birth":"20-03-1986","gender":""}
     value.mobile = this.refMobile.current.value;
@@ -107,29 +125,26 @@ class Register extends React.Component {
     value.lastname = this.refLastname.current.value;
     let dobraw = this.refDOBday.current.value + '-' + this.refDOBmonth.current.value + '-' + this.refDOByear.current.value;
 
-    if (this.refGenderMale.checked) {
+    if (this.refGenderMale.current.checked) {
       value.gender = this.refGenderMale.current.value;
     }
-    if (this.refGenderFemale.checked) {
+    if (this.refGenderFemale.current.checked) {
       value.gender = this.refGenderFemale.current.value;
     }
     if (dobraw !== 'DEFAULT-DEFAULT-DEFAULT') {
       value.date_of_birth = dobraw;
     }
 
-    console.log(this.refGenderMale);
-
-    validMobile = this.validateMobile(value.mobile);
-    this.modifyState({
-      tooltipMobileOpen: !validMobile
-    });
-    validEmail = this.validateEmail(value.email);
-    this.modifyState({
-      tooltipEmailOpen: !validEmail
-    });
+    validEmail = this.validateEmail();
+    validMobile = this.validateMobile();
 
     if (validMobile && validEmail) {
-      this.send(value);
+      this.modifyState({
+        tooltipEmailOpen: false,
+        tooltipMobileOpen: false
+      });
+      console.log(value);
+    //   this.send(value);
     }
   }
 
@@ -247,13 +262,13 @@ class Register extends React.Component {
           <Col id="registerBlock" sm="12" md={{ size: 6, offset: 3 }}>
             <h2>Registration</h2>
             <form onSubmit={this.onSubmit.bind(this)}>
-              <Tooltip placement="top" isOpen={this.state.tooltipMobileOpen} autohide={false} target="mobileField" >{this.state.tooltipMobileMessage}</Tooltip>
+              <Tooltip placement="top" isOpen={this.state.tooltipMobileOpen} autohide={true} target="mobileField" >{this.state.tooltipMobileMessage}</Tooltip>
               <input id="mobileField" type="number" required name="mobile" ref={this.refMobile} className="form-control" placeholder="Mobile number" />
 
-              <Tooltip placement="top" isOpen={this.state.tooltipFirstnameOpen} autohide={false} target="firstnameField" >{this.state.tooltipFirstnameMessage}</Tooltip>
+              <Tooltip placement="top" isOpen={this.state.tooltipFirstnameOpen} autohide={true} target="firstnameField" >{this.state.tooltipFirstnameMessage}</Tooltip>
               <input id="firstnameField" type="text" required name="firstname" ref={this.refFirstname} className="form-control" placeholder="Firstname" />
 
-              <Tooltip placement="top" isOpen={this.state.tooltipLastnameOpen} autohide={false} target="lastnameField" >{this.state.tooltipLastnameMessage}</Tooltip>
+              <Tooltip placement="top" isOpen={this.state.tooltipLastnameOpen} autohide={true} target="lastnameField" >{this.state.tooltipLastnameMessage}</Tooltip>
               <input id="lastnameField" type="text" required name="lastname" ref={this.refLastname} className="form-control" placeholder="Lastname" />
 
               <label htmlFor="dob-group">Date of Birth</label>
@@ -341,14 +356,14 @@ November - 30 days
 December - 31 days */}
               </div>
               <div className="form-control genderSelect nobgbd" >
-                <input id="genderSelectMale" type="radio" name="gender" ref={this.refGenderMale} value="male" /> <label htmlFor="genderSelectMale" className="gender-form">Male</label>
-                <input id="genderSelectFemale" type="radio" name="gender" ref={this.refGenderFemale} value="female" /> <label htmlFor="genderSelectFemale" className="gender-form">Female</label>
+                <input id="genderSelectMale" type="radio" name="genderFieldMale" ref={this.refGenderMale} value="male" /> <label htmlFor="genderSelectMale" className="gender-form">Male</label>
+                <input id="genderSelectFemale" type="radio" name="genderFieldFemale" ref={this.refGenderFemale} value="female" /> <label htmlFor="genderSelectFemale" className="gender-form">Female</label>
               </div>
 
               <Tooltip placement="top" isOpen={this.state.tooltipEmailOpen} autohide={true} target="emailField" >{this.state.tooltipEmailMessage}</Tooltip>
-              <input id="emailField" type="email" required name="email" ref={this.refEmail} className="form-control" placeholder="Email" />
-              
-              <Button color="primary" className="btn-register">Register</Button>
+              <input id="emailField" type="text" required name="email" ref={this.refEmail} className="form-control" placeholder="Email" />
+
+              <Button color="primary" className="btn-register" ref={this.refSubmitButton}>Register</Button>
             </form>
           </Col>
         </Row>

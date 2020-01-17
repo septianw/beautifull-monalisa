@@ -9,6 +9,8 @@ Pick one package of dep from release tab that suitable to your system (i pick v0
 Before running, make sure mysql running and bind into tcp/ip instead of socket, and configure the app
 to point to correct database ip, port, username, and password. Configuration stored at ./config.toml file, template provided.
 
+Please refer to release to download binary version of this project.
+
 ### Prerequisities
 
 1. Install Go

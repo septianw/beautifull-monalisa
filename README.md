@@ -9,6 +9,20 @@ Pick one package of dep from release tab that suitable to your system (i pick v0
 Before running, make sure mysql running and bind into tcp/ip instead of socket, and configure the app
 to point to correct database ip, port, username, and password. Configuration stored at ./config.toml file, template provided.
 
+### Prerequisities
+
+1. Install Go
+   Refer to [golang site documentation]("https://golang.org/") for detail installation instruction.
+2. Install godep
+   Download godep v0.5.4 at [github release page]("https://github.com/golang/dep/releases") and put it in your path
+3. Install esc
+   Install esc by running this command
+   ```
+           go get -u github.com/mjibson/esc
+   ```
+4. Install npm
+   Refer to [nodejs documentation]("https://nodejs.org/en/download/") for detail installation instruction
+
 #### The config file template
 ```
 [server]

@@ -1,1 +1,14 @@
-http://localhost:5987/api/v1/user/
+POST /api/v1/user/ HTTP/1.1
+Host: localhost:5987
+Content-Type: application/json
+Authorization: Bearer c66f2005-b556-47e9-8086-328a354e6064
+Cache-Control: no-cache
+
+{
+  "mobile":"08123456751",
+  "email":"user@network.net",
+  "firstname":"Maya",
+  "lastname":"Lauren",
+  "date_of_birth":"20-03-1986",
+  "gender":"female"
+}

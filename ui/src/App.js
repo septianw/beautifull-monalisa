@@ -3,7 +3,7 @@ import './App.css';
 import Register from './Register'
 import { Container, Row, Col, Button } from 'reactstrap';
 
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { HashRouter as Router, Route, Switch } from 'react-router-dom';
 
 var wsconn;
 
@@ -70,7 +70,7 @@ class App extends React.Component {
         <Route exact={true} path="/">
           <Register s={this.state} />
         </Route>
-        <Router exact={true} path="/login">
+        <Router exact={true} path="/#login">
           <Login />
         </Router>
       </Switch>

@@ -49,16 +49,33 @@
   margin-bottom: 18px;
 }
 
-.form-control:disabled, .form-control[:read-only] {
+.form-control:disabled, .form-control:read-only {
   background: #fff;
   border-color: #b3b3b3;
   color: #bababa;
 }
 
-.btn-register:disabled, .btn-login[:read-only] {
-  border-color: #e1bfe7 !important;
-  background: #e1bfe7 !important;
-  color: #ffffff !important;
+input[type=radio]+label {
+  color: black;
+}
+
+input#genderSelectMale:disabled+label,
+input#genderSelectFemale:disabled+label {
+  color: #bababa;
+}
+
+input#genderSelectMale:disabled,
+input#genderSelectFemale:disabled {
+  background: #fff;
+  border-color: #b3b3b3;
+  color: #bababa;
+  color: #bababa;
+}
+
+.btn-register:disabled, .btn-login:read-only {
+  border-color: #e1bfe7;
+  background: #e1bfe7;
+  color: #ffffff;
 }
 
 .btn-register, .btn-login {

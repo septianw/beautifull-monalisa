@@ -2,9 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"os"
-
-	log "gopkg.in/inconshreveable/log15.v2"
 
 	"time"
 
@@ -15,10 +12,11 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 
-	"github.com/spf13/viper"
+	// "github.com/spf13/viper"
 	"gopkg.in/gorp.v1"
 )
 
+// Store Database config fetched from config here
 type DbConfig struct {
 	Hostname string
 	Port     int64
@@ -31,6 +29,7 @@ type Config struct {
 	Db DbConfig
 }
 
+// Query result type holder
 type UserResult struct {
 	Mobile_number string  `db:"mobile_number"`
 	Email         string  `db:"email"`
@@ -40,35 +39,16 @@ type UserResult struct {
 	Gender        string  `db:"gender"`
 }
 
+// Initiate database function with config from config file.
 func InitDb() (dbmap *gorp.DbMap, config Config, err error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(".")
-	if strings.Compare(os.Getenv("RUNMODE"), "testing") == 0 {
-		viper.AddConfigPath("$HOME")
-	}
 
-	err = viper.ReadInConfig()
-	ErrHandler(err)
-	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// log.Fataln("No config file found.")
-			log.Crit("No config file found.")
-			os.Exit(2)
-			// Config file not found; ignore error if desired
-		} else {
-			// log.Fatalln(err)
-			log.Crit(err.Error())
-			os.Exit(2)
-			// Config file was found but another error was produced
-		}
-	}
+	config.Db.Hostname = V.GetString("database.hostname")
+	config.Db.Port = V.GetInt64("database.port")
+	config.Db.Username = V.GetString("database.username")
+	config.Db.Password = V.GetString("database.password")
+	config.Db.Database = V.GetString("database.database")
 
-	config.Db.Hostname = viper.GetString("database.hostname")
-	config.Db.Port = viper.GetInt64("database.port")
-	config.Db.Username = viper.GetString("database.username")
-	config.Db.Password = viper.GetString("database.password")
-	config.Db.Database = viper.GetString("database.database")
+	L.Debug("Config database", "config", config)
 
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 		config.Db.Username,
@@ -95,6 +75,7 @@ func InitDb() (dbmap *gorp.DbMap, config Config, err error) {
 	return
 }
 
+// Function to insert user into database.
 func InsertUser(user UserIn) (err error) {
 	Dbmap, Cfg, err = InitDb()
 	ErrHandler(err)
@@ -108,29 +89,26 @@ func InsertUser(user UserIn) (err error) {
 		Firstname:    user.Firstname,
 		Lastname:     user.Lastname,
 		DateOfBirth:  t,
+		Gender:       user.Gender,
 	}
 
 	q = fmt.Sprintf("select count(*) from user where mobile_number = '%s'", user.Mobile)
 	mobileNum, err := Dbmap.SelectInt(q)
 	ErrHandler(err)
-	log.Debug("Number of duplicate mobile found.", "mobileNum", mobileNum)
+	L.Debug("Number of duplicate mobile found.", "mobileNum", mobileNum)
 
 	q = fmt.Sprintf("select count(*) from user where email = '%s'", user.Email)
 	emailNum, err := Dbmap.SelectInt(q)
 	ErrHandler(err)
-	log.Debug("Email of duplicate email found.", "emailNum", emailNum)
-
-	// if strings.Compare(user.Gender, "") == 0 {
-	// 	u.Gender = "Prefer not to mention"
-	// }
+	L.Debug("Email of duplicate email found.", "emailNum", emailNum)
 
 	if (mobileNum == 0) && (emailNum == 0) {
-		log.Debug("1")
+		L.Debug("1")
 		err = Dbmap.Insert(&u)
-		log.Debug("U variable after insert", "u", u)
+		L.Debug("U variable after insert", "u", u)
 		ErrHandler(err)
 	} else {
-		log.Debug("2")
+		L.Debug("2")
 		// duplicate found
 		if mobileNum > 0 {
 			err = errors.New("Duplicate mobile_number found.")
@@ -154,15 +132,15 @@ func GetUser(user UserIn) (result UserIn, err error) {
 
 	var res UserResult
 	var q string
-	log.Debug("Query of getUser", "q", q)
+	L.Debug("Query of getUser", "q", q)
 
 	q = fmt.Sprintf("select * from user where mobile_number = '%s' and email = '%s'", user.Mobile, user.Email)
 	err = Dbmap.SelectOne(&res, q)
 	ErrHandler(err)
 
-	log.Debug("query input", "user", user)
-	log.Debug("result of database", "res", res)
-	log.Debug("dob", "res", string(res.Date_of_birth))
+	L.Debug("query input", "user", user)
+	L.Debug("result of database", "res", res)
+	L.Debug("dob", "res", string(res.Date_of_birth))
 
 	result.Mobile = res.Mobile_number
 	result.Email = res.Email
@@ -174,9 +152,9 @@ func GetUser(user UserIn) (result UserIn, err error) {
 	if (len(res.Date_of_birth) != 0) ||
 		(strings.Compare(string(res.Date_of_birth), "") != 0) {
 		t, err := time.Parse("2006-01-02 15:04:05", string(res.Date_of_birth))
-		log.Debug("Content of res.Date_of_birth", "string(res.Date_of_birth)", string(res.Date_of_birth))
-		log.Debug("Content of res.Date_of_birth", "res.Date_of_birth", res.Date_of_birth)
-		log.Debug("Content of res.Date_of_birth", "len(res.Date_of_birth)", len(res.Date_of_birth))
+		L.Debug("Content of res.Date_of_birth", "string(res.Date_of_birth)", string(res.Date_of_birth))
+		L.Debug("Content of res.Date_of_birth", "res.Date_of_birth", res.Date_of_birth)
+		L.Debug("Content of res.Date_of_birth", "len(res.Date_of_birth)", len(res.Date_of_birth))
 		ErrHandler(err)
 		result.DateOfBirth = t.Format("02-01-2006")
 	}

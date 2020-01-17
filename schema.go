@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// Database table schema.
 type User struct {
 	MobileNumber string    `db:"mobile_number"`
 	Email        string    `db:"email"`

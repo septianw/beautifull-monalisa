@@ -5,13 +5,10 @@ import (
 	"net/http"
 
 	"errors"
-	// "strconv"
 	"strings"
-	// "time"
 
 	"github.com/gin-gonic/gin"
 	validator "gopkg.in/asaskevich/govalidator.v10"
-	log "gopkg.in/inconshreveable/log15.v2"
 )
 
 type UserIn struct {
@@ -38,11 +35,7 @@ DELETE /user/(:uid)
 
 func RegistrationHandler(c *gin.Context) {
 	segments = strings.Split(c.Param("path1"), "/")
-	log.Debug(fmt.Sprintf("segments: %+v", segments))
-	// log.Printf("\n%+v\n", c.Request.Method)
-	// log.Printf("\n%+v\n", c.Param("path1"))
-	// log.Printf("\n%+v\n", segments)
-	// log.Printf("\n%+v\n", len(segments))
+	L.Debug(fmt.Sprintf("segments: %+v", segments))
 
 	switch c.Request.Method {
 	case "POST":
@@ -76,9 +69,9 @@ func PostUserHandler(c *gin.Context) {
 
 	usr, err := GetUser(input)
 	ErrHandler(err)
-	log.Debug("Error GetUser with duplicate.")
-	log.Debug("It's from query", "usr", usr)
-	log.Debug("It's from input", "input", input)
+	L.Debug("Error GetUser with duplicate.")
+	L.Debug("It's from query", "usr", usr)
+	L.Debug("It's from input", "input", input)
 	if (strings.Compare(usr.Mobile, input.Mobile) == 0) ||
 		(strings.Compare(usr.Email, input.Email) == 0) {
 		c.JSON(http.StatusConflict, gin.H{"code": DATABASE_EXEC_FAIL,
@@ -93,13 +86,13 @@ func PostUserHandler(c *gin.Context) {
 		ErrHandler(err)
 
 		if err != nil {
-			log.Debug("Problem in insert user", "error", err)
+			L.Debug("Problem in insert user", "error", err)
 			c.JSON(http.StatusBadRequest, gin.H{"code": DATABASE_EXEC_FAIL,
 				"message": fmt.Sprintf("DATABASE_EXEC_FAIL: %s", err.Error())})
 			return
 		}
 	} else {
-		log.Debug("Problem in insert user", "error", err)
+		L.Debug("Problem in insert user", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"code": INPUT_VALIDATION_FAIL,
 			"message": fmt.Sprintf("INPUT_VALIDATION_FAIL: %s", err.Error())})
 		return
@@ -130,7 +123,7 @@ func GetUserHandler(c *gin.Context) {
 	err = InsertUser(input)
 
 	if err != nil {
-		log.Debug("Problem in insert user", "error", err)
+		L.Debug("Problem in insert user", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{"code": DATABASE_EXEC_FAIL,
 			"message": fmt.Sprintf("DATABASE_EXEC_FAIL: %s", err.Error())})
 		return

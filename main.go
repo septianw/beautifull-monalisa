@@ -8,7 +8,8 @@ import (
 
 	"context"
 	"fmt"
-	"log"
+
+	// "log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -16,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	// "github.com/spf13/viper"
+	"github.com/spf13/viper"
 
 	log15 "gopkg.in/inconshreveable/log15.v2"
 
@@ -49,11 +50,16 @@ var Dbmap *gorp.DbMap
 var Cfg Config
 var err error
 
-// var L log15.Logger
-// var Config *viper.Viper
+var L log15.Logger
 
+var V *viper.Viper
+
+// Default listening address
 var ListenAddr = "0.0.0.0:5987"
 
+/*
+	This is initiate function that always run at the first time before anything else.
+*/
 func init() {
 	// put custom validator to assert mobile input by user
 	validator.CustomTypeTagMap.Set("idnmobile", func(i interface{}, context interface{}) bool {
@@ -143,12 +149,58 @@ func init() {
 		return valid
 	})
 
-	// Initiate a logger
-	// L = log15.New("module", "main")
-
 	// Initiate a config
-	// Config = viper.New()
+	V = viper.New()
+	V.SetConfigName("config")
+	V.SetConfigType("toml")
+	V.AddConfigPath(".")
+	if strings.Compare(os.Getenv("RUNMODE"), "testing") == 0 {
+		V.AddConfigPath("$HOME")
+	}
 
+	err = V.ReadInConfig()
+	ErrHandler(err)
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// log.Fataln("No config file found.")
+			L.Crit("No config file found.")
+			os.Exit(2)
+			// Config file not found; ignore error if desired
+		} else {
+			// log.Fatalln(err)
+			L.Crit("Error at read config", "err.Error()", err.Error())
+			os.Exit(2)
+			// Config file was found but another error was produced
+		}
+	}
+
+	ListenAddr = fmt.Sprintf("%s:%d", V.GetString("server.bind"), V.GetInt64("server.port"))
+
+	// Initiate a logger
+	L = log15.New("module", "main")
+	L.SetHandler(log15.MultiHandler(
+		log15.StreamHandler(os.Stderr, log15.LogfmtFormat()),
+		log15.FilterHandler(func(r *log15.Record) bool {
+			return r.Lvl == log15.LvlError
+		}, log15.Must.FileHandler("error.json", log15.JsonFormat())),
+		log15.FilterHandler(func(r *log15.Record) bool {
+			var out bool
+			switch os.Getenv("RUNMODE") {
+			case "development":
+				out = (r.Lvl == log15.LvlCrit) || (r.Lvl == log15.LvlError) ||
+					(r.Lvl == log15.LvlWarn) || (r.Lvl == log15.LvlInfo) || (r.Lvl == log15.LvlDebug)
+			case "testing":
+				out = (r.Lvl == log15.LvlCrit) || (r.Lvl == log15.LvlError) ||
+					(r.Lvl == log15.LvlWarn) || (r.Lvl == log15.LvlInfo)
+			case "production":
+				out = (r.Lvl == log15.LvlCrit) || (r.Lvl == log15.LvlError) ||
+					(r.Lvl == log15.LvlWarn)
+			default:
+				out = (r.Lvl == log15.LvlCrit)
+			}
+			return out
+		}, log15.StreamHandler(os.Stdout, log15.LogfmtFormat())),
+	))
 }
 
 func main() {
@@ -156,21 +208,17 @@ func main() {
 	r := gin.Default()
 	r = Router(r)
 
-	// r := SetupRouter()
 	srv := &http.Server{
 		Addr:    ListenAddr,
 		Handler: r,
 	}
-	fmt.Printf("Listening at: %s", ListenAddr)
-
-	// srv.ListenAndServe()
+	fmt.Printf("\nListening at: %s\n", ListenAddr)
 
 	// gracefull shutdown procedure
-
 	go func() {
 		// service connections
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
+			L.Crit("Fail to listen", "err", err)
 		}
 	}()
 
@@ -182,24 +230,25 @@ func main() {
 	// kill -9 is syscall.SIGKILL but can't be catch, so don't need add it
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Shutdown Server ...")
+	L.Warn("Server Shutting down.")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		L.Crit("Server fail to start", "err", err)
 	}
 	// catching ctx.Done(). timeout of 5 seconds.
 	select {
 	case <-ctx.Done():
-		// os.Remove("/tmp/shinyRuntimeFile")
-		log.Println("timeout of 5 seconds.")
+		// do everything we need to shutdown here
+		L.Info("5 seconds timeout.")
 	}
-	log.Println("Server exiting")
+	L.Info("Server exiting")
 }
 
+// Initiate route function
 func Router(r *gin.Engine) *gin.Engine {
-	// r.Use(cors.Default())
+	// Enable cors middleware
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "DELETE", "PUT"},
@@ -210,40 +259,53 @@ func Router(r *gin.Engine) *gin.Engine {
 	r.Use(func(c *gin.Context) {
 		var h Head
 
-		log.Println(c.FullPath())
-		if strings.Compare(c.FullPath(), "/ws") == 0 {
-			c.Next()
-			return
-		}
-		log.Println(c.GetHeader("Authorization"))
+		L.Debug("Full path at middleware", "c.FullPath()", c.FullPath())
 
-		if err = c.ShouldBindHeader(&h); err != nil {
-			ErrHandler(err)
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"code": INPUT_VALIDATION_FAIL,
-				"message": fmt.Sprintf("INPUT_VALIDATION_FAIL: %s", errors.New("x-terminal header not found. access forbidden.").Error())})
-			c.Abort()
-			return
+		// if (strings.Compare(c.FullPath(), "/ws") == 0) || (strings.Compare(c.FullPath()[:3], "/ui") == 0) {
+		// 	c.Next()
+		// 	return
+		// }
+		L.Debug("Get header at middleware", `c.GetHeader("Authorization")`, c.GetHeader("Authorization"))
+		// L.Debug("Full path of api", "c.FullPath()[:4]", c.FullPath()[:4])
+		// L.Debug("result of compare", "s.compare", strings.Compare(c.FullPath()[:4], "/api"))
+
+		// bind header to header variable and fail if can't bind
+		if strings.Compare(c.FullPath()[1:3], "/api") == 0 {
+			if err = c.ShouldBindHeader(&h); err != nil {
+				ErrHandler(err)
+				c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"code": INPUT_VALIDATION_FAIL,
+					"message": fmt.Sprintf("INPUT_VALIDATION_FAIL: %s", errors.New("Authorization header not found. access forbidden.").Error())})
+				c.Abort()
+				return
+			}
+
+			// check authorization
+			if strings.Compare(h.Authorization, "") == 0 {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": FORBIDDEN_CODE,
+					"message": fmt.Sprintf("FORBIDDEN: %s", errors.New("Authorization required. Please login first.").Error())})
+				return
+			} else if strings.Compare(strings.Split(h.Authorization, " ")[1], apikey) == 0 {
+				c.Next()
+				return
+			}
 		}
 
-		// check authorization
-		if strings.Compare(h.Authorization, "") == 0 {
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"code": FORBIDDEN_CODE,
-				"message": fmt.Sprintf("FORBIDDEN: %s", errors.New("Authorization required. Please login first.").Error())})
-			return
-		} else if strings.Compare(strings.Split(h.Authorization, " ")[1], apikey) == 0 {
-			c.Next()
-			return
-		}
-
+		c.Next()
 		return
 	})
 
-	r.GET("/", func(c *gin.Context) {
-		c.String(http.StatusOK, "Hello world!")
-	})
+	// this is placeholder for UI
+	// r.StaticFS("/ui")
+	r.StaticFS("/ui", FS(false))
+	// r.GET("/", func(c *gin.Context) {
+	// 	c.String(http.StatusOK, "Hello world!")
+	// })
 
+	// this is the only endpoint for backend.
 	r.Any("/api/v1/user/*path1", RegistrationHandler)
 
+	// This websocket interface used for transmit apikey
+	// from server to javascript client
 	r.GET("/ws", func(c *gin.Context) {
 		WsHandler(c.Writer, c.Request)
 	})
@@ -256,6 +318,7 @@ func checkWhitelist(r *http.Request) bool {
 	return true
 }
 
+// Websocket handler
 func WsHandler(w http.ResponseWriter, r *http.Request) {
 	wsUpgrader.CheckOrigin = checkWhitelist
 

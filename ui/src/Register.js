@@ -17,7 +17,7 @@ class LoginButton extends React.Component {
   render() {
     if (this.props.show) {
       return <Col id="footerBlock" className="footerBlockDisable" sm="12" md={{ size: 6, offset: 3 }}>
-        <a href="/login" color="primary" className="btn-login btn btn-primary">Login</a>
+        <a href="#/login" color="primary" className="btn-login btn btn-primary">Login</a>
       </Col>
     } else {
       return <Col id="footerBlock" className="footerBlock" sm="12" md={{ size: 6, offset: 3 }}>

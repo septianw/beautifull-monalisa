@@ -205,41 +205,36 @@ func TestPostUserPositive(t *testing.T) {
 	userin.DateOfBirth = "20-03-1986"
 	userin.Gender = "female"
 
+	jsonUser, err := json.Marshal(userin)
+	handleErr(err, t)
+	t.Logf("\n%+v\n", string(jsonUser))
+
+	expect := expectation{201, string(jsonUser)}
+	assert.True(t, PostUser(userin, expect, t))
+
 	result, err := GetUser(userin)
 	handleErr(err, t)
 	t.Logf("%+v", result)
 	t.Logf("%+v", result.Mobile)
+}
 
-	jsonUser, err := json.Marshal(result)
+func TestPostUserNegativeAll(t *testing.T) {
+	var userin UserIn
+
+	userin.Mobile = "098712345678"
+	userin.Email = "usernetworknet"
+	userin.Firstname = ""
+	userin.Lastname = ""
+	userin.DateOfBirth = "20-03-1024"
+	userin.Gender = "apache helicopter"
+
+	jsonUser, err := json.Marshal(gin.H{"code": 2110, "message": "INPUT_VALIDATION_FAIL: Key: 'UserIn.Firstname' Error:Field validation for 'Firstname' failed on the 'required' tag\nKey: 'UserIn.Lastname' Error:Field validation for 'Lastname' failed on the 'required' tag"})
 	handleErr(err, t)
 
-	expect := expectation{201, string(jsonUser)}
+	expect := expectation{400, string(jsonUser)}
 
 	assert.True(t, PostUser(userin, expect, t))
 }
-
-// func TestPostUserNegativeAll(t *testing.T) {
-// 	var userin UserIn
-
-// 	userin.Mobile = "098712345678"
-// 	userin.Email = "usernetworknet"
-// 	userin.Firstname = ""
-// 	userin.Lastname = ""
-// 	userin.DateOfBirth = "20-03-1024"
-// 	userin.Gender = "apache helicopter"
-
-// 	result, err := GetUser(userin)
-// 	handleErr(err, t)
-// 	t.Logf("%+v", result)
-// 	t.Logf("%+v", result.Mobile)
-
-// 	jsonUser, err := json.Marshal(result)
-// 	handleErr(err, t)
-
-// 	expect := expectation{400, string(jsonUser)}
-
-// 	assert.True(t, PostUser(userin, expect, t))
-// }
 
 func TestGetUser(t *testing.T) {
 	var userin UserIn
